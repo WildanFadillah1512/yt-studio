@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "YT Analytics Selector",
+    "version": "6.0",
+    "description": "Pilih Metrik & Video dari YT Studio",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": [
+        "https://script.google.com/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://studio.youtube.com/*"
+            ],
+            "js": [
+                "content.js"
+            ]
+        }
+    ],
+    "action": {}
+}
