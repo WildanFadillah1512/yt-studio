@@ -1,49 +1,51 @@
 // ============================================================================
-// YT ANALYTICS ROBOT - V20 (ULTIMATE METRICS EDITION)
+// YT ANALYTICS ROBOT - V21 (BILINGUAL EDITION: ID & EN)
 // ============================================================================
 // Fitur:
-// 1. Mencakup 5 Kelompok Metrik Lengkap (Hype, Premium, Remix, dll)
-// 2. Logic Smart Update (Update Existing, Add New)
-// 3. Delay & Stabilizer untuk menangani banyaknya kolom data
+// 1. DUAL LANGUAGE SUPPORT (Bisa jalan di YouTube Studio Indo & Inggris)
+// 2. Mencakup 5 Kelompok Metrik Lengkap
+// 3. Logic Smart Update (Update Existing, Add New)
+// 4. Delay & Stabilizer untuk menangani banyaknya kolom data
 
 // 1. KONFIGURASI
 // Ganti dengan URL Webhook hasil Deploy Terbaru Anda
 const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwCJ_CB4s-948tY4P0gugctqVT500BaA9mALS7pxT5laAqwQWiESeTFv1j8qof_lQA4lg/exec";
 
-// --- DAFTAR METRIK LENGKAP (SESUAI REQUEST USER) ---
+// --- DAFTAR METRIK LENGKAP (INDONESIA & ENGLISH) ---
+// Script akan mencentang jika menemukan SALAH SATU dari kata di bawah ini
 const TARGET_METRICS = [
     // --- KELOMPOK 1: PERFORMA UTAMA ---
-    "Penayangan",                       // View count
-    "Waktu tonton (jam)",               // Watch time
-    "Rata-rata durasi tonton",          // Avg view duration
-    "Persentase penayangan rata-rata",  // Retention
-    "Penayangan YouTube Premium",       // Premium Views
+    "Penayangan", "Views",                                      // View count
+    "Waktu tonton (jam)", "Watch time (hours)",                 // Watch time
+    "Rata-rata durasi tonton", "Average view duration",         // Avg view duration
+    "Persentase penayangan rata-rata", "Average percentage viewed", // Retention
+    "Penayangan YouTube Premium", "YouTube Premium views",      // Premium Views
 
     // --- KELOMPOK 2: JANGKAUAN ---
-    "Tayangan",                         // Impressions
-    "Rasio klik-tayang dari tayangan",  // CTR
-    "Penonton unik",                    // Unique viewers
-    "Penayangan rata-rata per penonton",// Avg views per viewer
+    "Tayangan", "Impressions",                                  // Impressions
+    "Rasio klik-tayang dari tayangan", "Impressions click-through rate", // CTR
+    "Penonton unik", "Unique viewers",                          // Unique viewers
+    "Penayangan rata-rata per penonton", "Average views per viewer", // Avg views per viewer
 
     // --- KELOMPOK 3: AUDIENS ---
-    "Penonton baru",                    // New viewers
-    "Penonton yang kembali",            // Returning viewers
-    "Subscriber",                       // Total subs
-    "Subscriber yang diperoleh",        // Subs gained
-    "Subscriber yang hilang",           // Subs lost
+    "Penonton baru", "New viewers",                             // New viewers
+    "Penonton yang kembali", "Returning viewers",               // Returning viewers
+    "Subscriber", "Subscribers",                                // Total subs
+    "Subscriber yang diperoleh", "Subscribers gained",          // Subs gained
+    "Subscriber yang hilang", "Subscribers lost",               // Subs lost
 
     // --- KELOMPOK 4: INTERAKSI ---
-    "Suka",                             // Likes
-    "Tidak suka",                       // Dislikes
-    "Suka (vs. tidak suka)",            // Sentiment ratio
-    "Komentar ditambahkan",             // Comments
-    "Pembagian",                        // Shares
-    "Poin hype",                        // Hype points (New Feature)
+    "Suka", "Likes",                                            // Likes
+    "Tidak suka", "Dislikes",                                   // Dislikes
+    "Suka (vs. tidak suka)", "Likes (vs. dislikes)",            // Sentiment ratio
+    "Komentar ditambahkan", "Comments added",                   // Comments
+    "Pembagian", "Shares",                                      // Shares
+    "Poin hype", "Hype points",                                 // Hype points
 
     // --- KELOMPOK 5: KONVERSI & VIRALITAS ---
-    "Jumlah remix",                     // Remixes created
-    "Klik pada elemen layar akhir",     // End screen clicks
-    "Simpanan playlist"                 // Playlist adds
+    "Jumlah remix", "Remixes created",                          // Remixes created
+    "Klik pada elemen layar akhir", "End screen element clicks",// End screen clicks
+    "Simpanan playlist", "Playlist adds", "Added to playlists"  // Playlist adds
 ];
 
 // 2. UTILS & HELPERS
@@ -53,7 +55,7 @@ const getTimestamp = () => new Date().toLocaleString('id-ID', { timeZone: 'Asia/
 
 // --- FUNGSI TUNGGU LOADING (STABILIZER) ---
 async function waitForLoadingToFinish() {
-    console.log("⏳ Menunggu stabilitas halaman...");
+    console.log("⏳ Menunggu stabilitas halaman (Waiting for page stability)...");
     let loading = document.querySelector('tp-yt-paper-spinner-lite[active], .ytcp-spinner');
     while (loading) {
         await delay(500);
@@ -67,18 +69,19 @@ async function waitForLoadingToFinish() {
         rows = document.querySelectorAll('yta-explore-table-row');
         retries++;
     }
-    console.log("✅ Halaman Siap.");
+    console.log("✅ Halaman Siap (Page Ready).");
 }
 
-// --- FUNGSI KLIK HEADER TANGGAL (AUTO SORT) ---
+// --- FUNGSI KLIK HEADER TANGGAL (AUTO SORT BILINGUAL) ---
 async function clickDateHeader() {
-    console.log("📅 Mengatur urutan tanggal...");
+    console.log("📅 Mengatur urutan tanggal (Sorting Date)...");
     const headers = document.querySelectorAll('yta-explore-table-header-cell');
     for (const h of headers) {
         const titleEl = h.querySelector('#header-title');
         if (titleEl) {
             const text = titleEl.innerText.toLowerCase();
-            if (text.includes('tanggal publikasi') || text.includes('publish date') || text.includes('date')) {
+            // Cek bahasa Indo & Inggris
+            if (text.includes('tanggal publikasi') || text.includes('publish date') || text.includes('date published') || text.includes('date')) {
                 titleEl.click();
                 return true;
             }
@@ -87,7 +90,7 @@ async function clickDateHeader() {
     return false;
 }
 
-// --- FUNGSI EKSTRAKSI METADATA DASAR ---
+// --- FUNGSI EKSTRAKSI METADATA DASAR (BILINGUAL) ---
 function extractRowMeta(rowElement) {
     let title = "Tanpa Judul";
     const titleEl = rowElement.querySelector('#entity-title-value') || rowElement.querySelector('#video-title');
@@ -100,6 +103,7 @@ function extractRowMeta(rowElement) {
         date = clean(dateHighlight.innerText);
     } else if (dateSubtitle) {
         let rawDate = clean(dateSubtitle.innerText);
+        // Hapus kata-kata awalan baik Indo maupun Inggris
         date = rawDate.replace(/Dipublikasikan|Published|Uploaded|Streamed/gi, '').trim();
     }
 
@@ -113,7 +117,7 @@ function extractRowMeta(rowElement) {
 // --- UI FINDER ---
 function findPlusButton() {
     // Mencari tombol (+) untuk tambah metrik
-    const selectors = ['.add-metric-button', '[aria-label="Tambahkan metrik ke tabel"]', '#add-metric-icon', 'ytcp-icon-button iron-icon[icon="icons:add-circle"]'];
+    const selectors = ['.add-metric-button', '[aria-label="Tambahkan metrik ke tabel"]', '[aria-label="Add metric to table"]', '#add-metric-icon', 'ytcp-icon-button iron-icon[icon="icons:add-circle"]'];
     for (let sel of selectors) {
         const el = document.querySelector(sel);
         if (el && el.offsetParent !== null) return el.closest('ytcp-icon-button') || el;
@@ -134,12 +138,12 @@ async function createPanel() {
 
     panel.innerHTML = `
         <div style="padding:15px; background:#1f1f1f; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center; border-radius:12px 12px 0 0;">
-            <h3 style="margin:0; font-size:15px; color:#4fc3f7; font-weight:bold;">YT Robot V20 (Full Metrics)</h3>
+            <h3 style="margin:0; font-size:15px; color:#4fc3f7; font-weight:bold;">YT Robot V21 (Bilingual)</h3>
             <button id="btnClose" style="background:none; border:none; color:#aaa; font-size:20px; cursor:pointer;">&times;</button>
         </div>
         <div style="padding:15px;">
             <div style="margin-bottom:12px; font-size:11px; color:#bbb; line-height:1.4;">
-                <strong>Status:</strong> Siap mengambil ${TARGET_METRICS.length} jenis data.<br>
+                <strong>Status:</strong> Support ID & EN Language.<br>
                 <em>Kelompok 1-5 (Premium, Hype, Remix, dll).</em>
             </div>
             
@@ -209,7 +213,7 @@ async function runProcess() {
     btn.style.opacity = "0.5";
 
     // --- STEP A: BUKA & KUNCI METRIK ---
-    status.innerText = "⚙️ Mengkonfigurasi Metrik (1-5)...";
+    status.innerText = "⚙️ Config Metrics (ID/EN)...";
     const triggerBtn = findPlusButton();
     if (triggerBtn) {
         triggerBtn.click();
@@ -218,20 +222,26 @@ async function runProcess() {
         const items = document.querySelectorAll('yta-explore-column-picker-dialog ytcp-checkbox-lit');
         let needsApply = false;
 
-        // Header default yang tidak boleh di-uncheck
-        const BLACKLIST_HEADER = ['video', 'konten', 'durasi', 'duration', 'tanggal publikasi', 'publish date', 'tanggal upload'];
+        // Header default yang tidak boleh di-uncheck (Bilingual Blacklist)
+        const BLACKLIST_HEADER = [
+            'video', 'konten', 'content',
+            'durasi', 'duration',
+            'tanggal publikasi', 'publish date', 'date published',
+            'tanggal upload', 'upload date'
+        ];
 
         for (const item of items) {
             const labelEl = item.querySelector('.label');
             const text = clean(labelEl ? labelEl.innerText : item.innerText);
             if (!text) continue;
 
+            // Skip jika ini adalah kolom wajib (Video/Date)
             if (BLACKLIST_HEADER.includes(text.toLowerCase())) continue;
 
             const isTarget = TARGET_METRICS.includes(text);
             const isChecked = item.getAttribute('aria-checked') === 'true';
 
-            // Logic: Jika Target tapi belum checked -> Check
+            // Logic: Jika Target (ada di list ID/EN) tapi belum checked -> Check
             //        Jika BUKAN Target tapi checked -> Uncheck
             if (isTarget && !isChecked) {
                 item.click(); needsApply = true; await delay(50);
@@ -242,12 +252,17 @@ async function runProcess() {
         await delay(500);
 
         if (needsApply) {
-            status.innerText = "💾 Menerapkan Kolom Tabel...";
-            const apply = Array.from(document.querySelectorAll('button, ytcp-button-shape')).find(e => ['terapkan', 'apply'].includes(clean(e.innerText).toLowerCase()));
+            status.innerText = "💾 Applying Table...";
+            // Cari tombol Apply dalam bahasa apa saja
+            const apply = Array.from(document.querySelectorAll('button, ytcp-button-shape')).find(e => {
+                const txt = clean(e.innerText).toLowerCase();
+                return ['terapkan', 'apply'].includes(txt);
+            });
+
             if (apply) apply.click();
 
             // Delay Panjang karena YouTube me-render ulang tabel besar
-            status.innerText = "⏳ Rendering Tabel (10 Detik)...";
+            status.innerText = "⏳ Rendering Table (10s)...";
             await delay(10000);
             await waitForLoadingToFinish();
         } else {
@@ -257,17 +272,17 @@ async function runProcess() {
     }
 
     // --- STEP B: SORTING TANGGAL ---
-    status.innerText = "📅 Mengurutkan Data...";
+    status.innerText = "📅 Sorting Date...";
     await delay(1000);
     const sorted = await clickDateHeader();
     if (sorted) {
-        status.innerText = "⏳ Tunggu Sorting (10 Detik)...";
+        status.innerText = "⏳ Wait Sort (10s)...";
         await delay(10000);
         await waitForLoadingToFinish();
     }
 
     // --- STEP C: MAPPING POSISI KOLOM ---
-    status.innerText = "🔍 Membaca Struktur Kolom...";
+    status.innerText = "🔍 Mapping Columns...";
     const finalHeaders = ["Judul Video", "Tanggal Upload", "Durasi"];
     const metricMap = [];
 
@@ -277,8 +292,10 @@ async function runProcess() {
         const txt = clean(h.innerText);
         const txtLower = txt.toLowerCase();
 
-        // Ambil semua header selain 3 kolom utama (karena 3 kolom utama diambil dari metadata)
-        if (!['video', 'konten', 'durasi', 'duration', 'tanggal publikasi', 'publish date', 'tanggal upload', 'date'].includes(txtLower) && txt !== "") {
+        // Ambil semua header selain 3 kolom utama (Blacklist Bilingual)
+        const SKIP_COLS = ['video', 'konten', 'content', 'durasi', 'duration', 'tanggal publikasi', 'publish date', 'tanggal upload', 'date', 'date published'];
+
+        if (!SKIP_COLS.includes(txtLower) && txt !== "") {
             finalHeaders.push(txt);
             metricMap.push(txt);
         }
@@ -320,17 +337,17 @@ async function runProcess() {
     });
 
     // --- STEP E: KIRIM KE SPREADSHEET ---
-    status.innerText = "🚀 Mengirim Data...";
+    status.innerText = "🚀 Sending Data...";
     try {
         await fetch(WEBHOOK_URL, {
             method: 'POST', mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ headers: finalHeaders, rows: finalData })
         });
-        status.innerText = "✅ SELESAI!";
-        alert(`SUKSES!\n\n${finalData.length} Video berhasil diproses.\nSemua metrik (Kelompok 1-5) telah diambil.\nData yang sudah ada diupdate, data baru ditambahkan.`);
+        status.innerText = "✅ DONE!";
+        alert(`SUCCESS!\n\n${finalData.length} Videos processed.\nFull Metrics (ID/EN) captured.\nData sent to spreadsheet.`);
     } catch (e) {
-        status.innerText = "❌ Gagal Kirim.";
+        status.innerText = "❌ Failed.";
         alert("Error Network: " + e.message);
     }
 
